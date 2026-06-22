@@ -1,0 +1,40 @@
+services:
+  evcc:
+    container_name: evcc
+    image: evcc/evcc:latest
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./evcc.yaml:/etc/evcc.yaml
+      - ./data:/root/.evcc
+      - /etc/machine-id:/etc/machine-id
+      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id
+    depends_on:
+      - ser2net
+      - p1-proxy
+
+  ser2net:
+    container_name: ser2net
+    image: ghcr.io/jippi/docker-ser2net:latest
+    network_mode: host
+    restart: unless-stopped
+    entrypoint: ["tini", "--", "ser2net", "-d", "-l", "-u", "-c", "/etc/ser2net/ser2net.yaml"]
+    group_add:
+      - dialout
+    devices:
+      # Adjust this to match the P1 adapter on the target host:
+      # run: ls /dev/serial/by-id/
+      - /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A1603UF8-if00-port0:/dev/ttyUSB0
+    volumes:
+      - ./ser2net.yaml:/etc/ser2net/ser2net.yaml:ro
+
+  p1-proxy:
+    container_name: p1-proxy
+    image: python:3-alpine
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./p1-proxy.py:/p1-proxy.py:ro
+    command: python3 /p1-proxy.py
+    depends_on:
+      - ser2net

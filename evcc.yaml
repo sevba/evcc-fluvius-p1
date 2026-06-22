@@ -1,0 +1,53 @@
+log: debug
+
+site:
+  title: Home
+  meters:
+    grid: grid
+    pv:
+      - pv
+
+meters:
+  # -------------------------
+  # GRID (P1 DSMR via ser2net)
+  # Fluvius uses tariff-based 1.8.1/1.8.2 OBIS codes which the dsmr
+  # template does not expose as energy; p1-proxy reads the telegram
+  # and serves all values as JSON on port 7071.
+  # -------------------------
+  - name: grid
+    type: custom
+    power:
+      source: http
+      uri: http://127.0.0.1:7071/
+      jq: .power
+      timeout: 5s
+    energy:
+      source: http
+      uri: http://127.0.0.1:7071/
+      jq: .energy
+      timeout: 5s
+    currents:
+      - source: http
+        uri: http://127.0.0.1:7071/
+        jq: .i1
+        timeout: 5s
+      - source: http
+        uri: http://127.0.0.1:7071/
+        jq: .i2
+        timeout: 5s
+      - source: http
+        uri: http://127.0.0.1:7071/
+        jq: .i3
+        timeout: 5s
+
+  # -------------------------
+  # PV (SMA Sunny Boy)
+  # -------------------------
+  - name: pv
+    type: template
+    template: sma-inverter-modbus
+    usage: pv
+    modbus: tcpip
+    id: 3
+    host: 10.0.40.19
+    port: 502

@@ -1,0 +1,12 @@
+%YAML 1.1
+---
+define: &banner "P1 Fluvius bridge\r\n"
+
+connection: &p1meter
+  accepter: tcp,3333
+  enable: on
+  options:
+    max-connections: 8
+    kickolduser: true
+    banner: *banner
+  connector: serialdev,/dev/ttyUSB0,115200n81,local
