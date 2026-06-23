@@ -4,9 +4,11 @@ Docker Compose stack that connects a Belgian Fluvius smart meter (DSMR P1 port) 
 
 ## Background
 
-EVCC includes a built-in DSMR meter type, but it reads only the standard `1-0:1.8.0` OBIS code for total grid consumption. Fluvius meters split energy across two tariff registers (`1.8.1` day + `1.8.2` night) and similarly for export (`2.8.1` + `2.8.2`). The standard EVCC template therefore reports zero energy, breaking the solar surplus calculation.
+Belgian Fluvius smart meters (eMUCs, based on DSMR 5.0) split grid energy across two tariff registers — `1-0:1.8.1` (day) and `1-0:1.8.2` (night) for consumption, and `1-0:2.8.1` + `1-0:2.8.2` for export. They do **not** provide a combined `1-0:1.8.0` total.
 
-This stack solves that with a small custom proxy (`p1-proxy`) that reads raw DSMR telegrams, sums the tariff registers, and serves the result as a simple JSON HTTP endpoint that EVCC can consume natively.
+EVCC's built-in DSMR meter template can map `energy` to a single OBIS register. Because EVCC needs one combined total for its solar surplus calculation, the template alone cannot correctly represent Fluvius energy — you would get only one tariff, not the sum of both.
+
+This stack solves that with a small custom proxy (`p1-proxy`) that reads raw DSMR telegrams, sums the tariff registers, and serves the result as a simple JSON HTTP endpoint that EVCC can consume via its `custom` meter type.
 
 > **P1-to-LAN adapters** (e.g. HomeWizard, Slimme Lezer) have their own HTTP API and do not need ser2net or p1-proxy. This stack is specifically for **P1-to-USB cables** (FTDI-based).
 
